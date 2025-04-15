@@ -381,4 +381,63 @@ document.addEventListener("DOMContentLoaded", () => {
             // cargarMetas(); // Eliminar esta línea
         }
     });
+
+    // Función para manejar el menú corredizo en escritorio
+    setupDesktopMenu();
+    
+    // Re-inicializar el menú si se redimensiona la ventana
+    window.addEventListener('resize', setupDesktopMenu);
+
+    // Función para manejar el menú móvil
+    setupMobileMenu();
+    
+    // Re-inicializar los menús si se redimensiona la ventana
+    window.addEventListener('resize', () => {
+        setupDesktopMenu();
+        setupMobileMenu();
+    });
 });
+
+// Función para manejar el menú corredizo en escritorio
+function setupDesktopMenu() {
+    const sidebar = document.querySelector('.sidebar-menu');
+    const container = document.querySelector('.container');
+    const toggleButton = document.getElementById('toggle-menu');
+    
+    if (window.innerWidth >= 769) {
+        toggleButton.textContent = '⇤'; // Menú visible inicialmente
+        
+        toggleButton.addEventListener('click', () => {
+            sidebar.classList.toggle('sidebar-oculto');
+            toggleButton.textContent = sidebar.classList.contains('sidebar-oculto') ? '⇥' : '⇤';
+        });
+    }
+}
+
+// Función para manejar el menú móvil
+function setupMobileMenu() {
+    const menuToggle = document.getElementById('menuToggle');
+    const overlay = document.getElementById('overlay');
+    const sidebarMenu = document.querySelector('.sidebar-menu');
+    
+    if (window.innerWidth <= 768) {
+        menuToggle.addEventListener('click', () => {
+            sidebarMenu.classList.toggle('active');
+            overlay.classList.toggle('active');
+        });
+
+        overlay.addEventListener('click', () => {
+            sidebarMenu.classList.remove('active');
+            overlay.classList.remove('active');
+        });
+
+        // Cerrar menú al hacer clic en un enlace
+        const menuLinks = sidebarMenu.querySelectorAll('a');
+        menuLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                sidebarMenu.classList.remove('active');
+                overlay.classList.remove('active');
+            });
+        });
+    }
+}

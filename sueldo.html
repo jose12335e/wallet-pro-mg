@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Botón de menú móvil -->
+    <button class="menu-toggle" id="menuToggle">☰ Menú</button>
+    <div class="overlay" id="overlay"></div>
+
     <div class="container">
         <h2>Agregar Sueldo Mensual</h2>
         <form id="sueldoForm">
@@ -23,6 +27,24 @@
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menuToggle');
+            const overlay = document.getElementById('overlay');
+            const sidebarMenu = document.getElementById('sidebarMenu');
+
+            function toggleMenu() {
+                sidebarMenu.classList.toggle('active');
+                overlay.classList.toggle('active');
+            }
+
+            menuToggle.addEventListener('click', toggleMenu);
+            overlay.addEventListener('click', toggleMenu);
+
+            // Cerrar menú al hacer clic en un enlace
+            const menuLinks = sidebarMenu.querySelectorAll('a');
+            menuLinks.forEach(link => {
+                link.addEventListener('click', toggleMenu);
+            });
+
             const form = document.getElementById('sueldoForm');
             const mensaje = document.getElementById('mensaje');
 

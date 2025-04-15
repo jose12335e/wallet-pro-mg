@@ -8,6 +8,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    <!-- Botón de menú móvil -->
+    <button class="menu-toggle" id="menuToggle">☰ Menú</button>
+    <div class="overlay" id="overlay"></div>
+
     <div class="container">
         <h2>Control de Deudas</h2>
         
@@ -49,6 +53,24 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menuToggle');
+            const overlay = document.getElementById('overlay');
+            const sidebarMenu = document.getElementById('sidebarMenu');
+
+            function toggleMenu() {
+                sidebarMenu.classList.toggle('active');
+                overlay.classList.toggle('active');
+            }
+
+            menuToggle.addEventListener('click', toggleMenu);
+            overlay.addEventListener('click', toggleMenu);
+
+            // Cerrar menú al hacer clic en un enlace
+            const menuLinks = sidebarMenu.querySelectorAll('a');
+            menuLinks.forEach(link => {
+                link.addEventListener('click', toggleMenu);
+            });
+
             // Inicializar array de deudas si no existe
             if (!localStorage.getItem('deudas')) {
                 localStorage.setItem('deudas', JSON.stringify([]));

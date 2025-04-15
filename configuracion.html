@@ -8,6 +8,10 @@
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 </head>
 <body>
+    <!-- Botón de menú móvil -->
+    <button class="menu-toggle" id="menuToggle">☰ Menú</button>
+    <div class="overlay" id="overlay"></div>
+
     <div class="container">
         <h2>Configuración</h2>
         
@@ -60,7 +64,28 @@
         </div>
     </div>
 
-    <script type="module" src="../firebase-config.js"></script>
-    <script type="module" src="../script.js"></script>
+    <script type="module" src="./firebase-config.js"></script>
+    <script type="module" src="./script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menuToggle');
+            const overlay = document.getElementById('overlay');
+            const sidebarMenu = document.getElementById('sidebarMenu');
+
+            function toggleMenu() {
+                sidebarMenu.classList.toggle('active');
+                overlay.classList.toggle('active');
+            }
+
+            menuToggle.addEventListener('click', toggleMenu);
+            overlay.addEventListener('click', toggleMenu);
+
+            // Cerrar menú al hacer clic en un enlace
+            const menuLinks = sidebarMenu.querySelectorAll('a');
+            menuLinks.forEach(link => {
+                link.addEventListener('click', toggleMenu);
+            });
+        });
+    </script>
 </body>
 </html> 
