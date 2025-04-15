@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Gasto</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Registrar Nuevo Gasto</h2>
+        <form id="gastoForm">
+            <div class="form-group">
+                <label for="monto">Monto del Gasto (RD$):</label>
+                <input type="number" id="monto" name="monto" required min="0" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="categoria">Categoría:</label>
+                <select id="categoria" name="categoria" required>
+                    <option value="">Seleccione una categoría</option>
+                    <option value="Comida">Comida</option>
+                    <option value="Transporte">Transporte</option>
+                    <option value="Servicios">Servicios</option>
+                    <option value="Educación">Educación</option>
+                    <option value="Salud">Salud</option>
+                    <option value="Otros">Otros</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="descripcion">Descripción (opcional):</label>
+                <input type="text" id="descripcion" name="descripcion">
+            </div>
+            <button type="submit" class="btn">Guardar Gasto</button>
+        </form>
+        <div id="mensaje"></div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('gastoForm');
+            const mensaje = document.getElementById('mensaje');
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const monto = parseFloat(document.getElementById('monto').value);
+                const categoria = document.getElementById('categoria').value;
+                const descripcion = document.getElementById('descripcion').value;
+                
+                // Obtener sueldo disponible actual
+                let sueldoDisponible = parseFloat(localStorage.getItem('sueldoDisponible'));
+                
+                // Verificar si hay suficiente saldo
+                if (monto > sueldoDisponible) {
+                    mensaje.innerHTML = `
+                        <div class="mensaje-error">
+                            No tiene suficiente saldo disponible para este gasto
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Actualizar sueldo disponible
+                sueldoDisponible -= monto;
+                localStorage.setItem('sueldoDisponible', sueldoDisponible.toString());
+                
+                // Guardar el gasto en el historial
+                const historialGastos = JSON.parse(localStorage.getItem('historialGastos') || '[]');
+                historialGastos.push({
+                    monto,
+                    categoria,
+                    descripcion,
+                    fecha: new Date().toISOString()
+                });
+                localStorage.setItem('historialGastos', JSON.stringify(historialGastos));
+                
+                // Mostrar mensaje de éxito
+                mensaje.innerHTML = `
+                    <div class="mensaje-exito">
+                        Gasto registrado correctamente. Sueldo disponible: RD$ ${sueldoDisponible.toFixed(2)}
+                    </div>
+                `;
+                
+                // Limpiar formulario
+                form.reset();
+            });
+        });
+    </script>
+</body>
+</html>

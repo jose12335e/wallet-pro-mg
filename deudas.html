@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Deudas</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>Control de Deudas</h2>
+        
+        <div class="graficos-container">
+            <div class="grafico-wrapper">
+                <h3>Estado General de Deudas</h3>
+                <canvas id="estadoDeudasChart"></canvas>
+            </div>
+        </div>
+
+        <div class="form-container">
+            <h3>Registrar Nueva Deuda</h3>
+            <form id="deudaForm">
+                <div class="form-group">
+                    <label for="nombre">Nombre del Acreedor:</label>
+                    <input type="text" id="nombre" name="nombre" required>
+                </div>
+                <div class="form-group">
+                    <label for="montoTotal">Monto Total (RD$):</label>
+                    <input type="number" id="montoTotal" name="montoTotal" required min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="fechaLimite">Fecha Límite (opcional):</label>
+                    <input type="date" id="fechaLimite" name="fechaLimite">
+                </div>
+                <button type="submit" class="btn">Guardar Deuda</button>
+            </form>
+        </div>
+
+        <div class="deudas-container">
+            <h3>Lista de Deudas</h3>
+            <div id="listaDeudas"></div>
+        </div>
+
+        <div class="volver">
+            <a href="../index.html" class="btn-volver">← Volver al Inicio</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar array de deudas si no existe
+            if (!localStorage.getItem('deudas')) {
+                localStorage.setItem('deudas', JSON.stringify([]));
+            }
+
+            const deudaForm = document.getElementById('deudaForm');
+            const listaDeudas = document.getElementById('listaDeudas');
+            let estadoDeudasChart;
+
+            // Función para actualizar el gráfico de estado de deudas
+            function actualizarGraficoDeudas() {
+                const deudas = JSON.parse(localStorage.getItem('deudas'));
+                
+                if (deudas.length === 0) {
+                    document.querySelector('.graficos-container').innerHTML = '<p class="sin-datos">No hay deudas para mostrar.</p>';
+                    return;
+                }
+
+                const totalPagado = deudas.reduce((sum, deuda) => sum + deuda.montoPagado, 0);
+                const totalPendiente = deudas.reduce((sum, deuda) => sum + (deuda.montoTotal - deuda.montoPagado), 0);
+
+                const ctx = document.getElementById('estadoDeudasChart').getContext('2d');
+                
+                if (estadoDeudasChart) {
+                    estadoDeudasChart.destroy();
+                }
+
+                estadoDeudasChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Pagado', 'Pendiente'],
+                        datasets: [{
+                            data: [totalPagado, totalPendiente],
+                            backgroundColor: [
+                                '#4CAF50',
+                                '#dc3545'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.raw || 0;
+                                        return `${label}: RD$ ${value.toFixed(2)}`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Función para guardar una nueva deuda
+            deudaForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const nombre = document.getElementById('nombre').value;
+                const montoTotal = parseFloat(document.getElementById('montoTotal').value);
+                const fechaLimite = document.getElementById('fechaLimite').value;
+                
+                const deudas = JSON.parse(localStorage.getItem('deudas'));
+                deudas.push({
+                    nombre,
+                    montoTotal,
+                    montoPagado: 0,
+                    fechaLimite,
+                    fecha: new Date().toISOString()
+                });
+                
+                localStorage.setItem('deudas', JSON.stringify(deudas));
+                mostrarDeudas();
+                actualizarGraficoDeudas();
+                deudaForm.reset();
+            });
+
+            // Función para verificar si una deuda está vencida
+            function esDeudaVencida(fechaLimite) {
+                if (!fechaLimite) return false;
+                const hoy = new Date();
+                const fechaLim = new Date(fechaLimite);
+                return fechaLim < hoy;
+            }
+
+            // Función para mostrar todas las deudas
+            function mostrarDeudas() {
+                const deudas = JSON.parse(localStorage.getItem('deudas'));
+                
+                if (deudas.length === 0) {
+                    listaDeudas.innerHTML = '<p class="sin-deudas">No tienes deudas activas.</p>';
+                    return;
+                }
+
+                const listaHTML = deudas.map((deuda, index) => {
+                    const restante = deuda.montoTotal - deuda.montoPagado;
+                    const fechaLimite = deuda.fechaLimite ? new Date(deuda.fechaLimite).toLocaleDateString('es-ES') : 'Sin fecha límite';
+                    const vencida = esDeudaVencida(deuda.fechaLimite);
+                    
+                    return `
+                        <div class="deuda-item ${vencida ? 'deuda-vencida' : ''}">
+                            <div class="deuda-info">
+                                <h4>${deuda.nombre}</h4>
+                                <p>Monto Total: RD$ ${deuda.montoTotal.toFixed(2)}</p>
+                                <p>Pagado: RD$ ${deuda.montoPagado.toFixed(2)}</p>
+                                <p>Restante: RD$ ${restante.toFixed(2)}</p>
+                                <p>Fecha Límite: ${fechaLimite}</p>
+                                ${vencida ? '<span class="advertencia-vencida">¡Deuda vencida!</span>' : ''}
+                            </div>
+                            <div class="pago-form">
+                                <input type="number" id="pago-${index}" placeholder="Monto del pago" min="0" step="0.01" max="${restante}">
+                                <button onclick="agregarPago(${index})" class="btn-pago">Agregar Pago</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                listaDeudas.innerHTML = listaHTML;
+            }
+
+            // Función para agregar un pago
+            window.agregarPago = function(index) {
+                const inputPago = document.getElementById(`pago-${index}`);
+                const montoPago = parseFloat(inputPago.value);
+                
+                if (!montoPago || montoPago <= 0) {
+                    alert('Por favor, ingrese un monto válido');
+                    return;
+                }
+
+                const deudas = JSON.parse(localStorage.getItem('deudas'));
+                const deuda = deudas[index];
+                const restante = deuda.montoTotal - deuda.montoPagado;
+
+                if (montoPago > restante) {
+                    alert('El monto del pago no puede ser mayor que la cantidad restante');
+                    return;
+                }
+
+                deuda.montoPagado += montoPago;
+                localStorage.setItem('deudas', JSON.stringify(deudas));
+                
+                mostrarDeudas();
+                actualizarGraficoDeudas();
+                inputPago.value = '';
+                
+                alert(`Pago de RD$ ${montoPago.toFixed(2)} registrado correctamente`);
+            };
+
+            // Mostrar deudas y gráfico al cargar la página
+            mostrarDeudas();
+            actualizarGraficoDeudas();
+        });
+    </script>
+</body>
+</html>

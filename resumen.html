@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resumen de Gastos</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h2>Resumen de Gastos</h2>
+
+        <div class="filtros-container">
+            <h3>Filtrar Gastos</h3>
+            <form id="filtroForm">
+                <div class="form-group">
+                    <label>
+                        <input type="radio" name="tipoFiltro" value="mes" checked>
+                        Filtrar por mes
+                    </label>
+                    <select id="mesFiltro" name="mesFiltro">
+                        <option value="">Seleccione un mes</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="radio" name="tipoFiltro" value="rango">
+                        Filtrar por rango de fechas
+                    </label>
+                    <div class="rango-fechas">
+                        <input type="date" id="fechaDesde" name="fechaDesde">
+                        <input type="date" id="fechaHasta" name="fechaHasta">
+                    </div>
+                </div>
+                <button type="submit" class="btn">Aplicar Filtro</button>
+            </form>
+        </div>
+
+        <div class="resumen-container">
+            <div class="total-gastos">
+                <h3>Total Gastado: RD$ <span id="totalGastado">0.00</span></h3>
+            </div>
+            <div class="graficos-container">
+                <div class="grafico-wrapper">
+                    <h3>Distribución de Gastos</h3>
+                    <canvas id="gastosChart"></canvas>
+                </div>
+                <div class="grafico-wrapper">
+                    <h3>Comparación de Ingresos y Gastos</h3>
+                    <canvas id="comparacionChart"></canvas>
+                </div>
+            </div>
+            <div class="historial-container">
+                <h3>Historial de Gastos</h3>
+                <div id="historialGastos"></div>
+            </div>
+        </div>
+
+        <div class="volver">
+            <a href="../index.html" class="btn-volver">← Volver al Inicio</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const filtroForm = document.getElementById('filtroForm');
+            const mesFiltro = document.getElementById('mesFiltro');
+            const fechaDesde = document.getElementById('fechaDesde');
+            const fechaHasta = document.getElementById('fechaHasta');
+            const historialGastos = document.getElementById('historialGastos');
+            const totalGastado = document.getElementById('totalGastado');
+            let gastosChart;
+            let comparacionChart;
+
+            // Cargar filtro guardado
+            const filtroGuardado = JSON.parse(localStorage.getItem('filtroGastos')) || {
+                tipoFiltro: 'mes',
+                mes: '',
+                fechaDesde: '',
+                fechaHasta: ''
+            };
+
+            // Aplicar filtro guardado
+            document.querySelector(`input[name="tipoFiltro"][value="${filtroGuardado.tipoFiltro}"]`).checked = true;
+            mesFiltro.value = filtroGuardado.mes;
+            fechaDesde.value = filtroGuardado.fechaDesde;
+            fechaHasta.value = filtroGuardado.fechaHasta;
+
+            // Generar opciones de meses
+            function generarOpcionesMeses() {
+                const meses = [
+                    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                ];
+                const añoActual = new Date().getFullYear();
+                const añoAnterior = añoActual - 1;
+                const añoSiguiente = añoActual + 1;
+
+                const años = [añoAnterior, añoActual, añoSiguiente];
+                let opcionesHTML = '<option value="">Seleccione un mes</option>';
+
+                años.forEach(año => {
+                    meses.forEach((mes, index) => {
+                        const valor = `${año}-${String(index + 1).padStart(2, '0')}`;
+                        const texto = `${mes} ${año}`;
+                        opcionesHTML += `<option value="${valor}">${texto}</option>`;
+                    });
+                });
+
+                mesFiltro.innerHTML = opcionesHTML;
+            }
+
+            // Función para normalizar fechas
+            function normalizarFecha(fecha) {
+                if (!fecha) return null;
+                
+                // Si la fecha está en formato dd/mm/yyyy
+                if (fecha.includes('/')) {
+                    const [dia, mes, año] = fecha.split('/');
+                    return new Date(año, mes - 1, dia);
+                }
+                
+                // Si la fecha está en formato yyyy-mm-dd
+                return new Date(fecha);
+            }
+
+            // Función para filtrar gastos
+            function filtrarGastos(gastos) {
+                const tipoFiltro = document.querySelector('input[name="tipoFiltro"]:checked').value;
+                
+                if (tipoFiltro === 'mes') {
+                    const mesSeleccionado = mesFiltro.value;
+                    if (!mesSeleccionado) return gastos;
+
+                    return gastos.filter(gasto => {
+                        const fechaGasto = normalizarFecha(gasto.fecha);
+                        if (!fechaGasto) return false;
+                        
+                        const añoMesGasto = `${fechaGasto.getFullYear()}-${String(fechaGasto.getMonth() + 1).padStart(2, '0')}`;
+                        return añoMesGasto === mesSeleccionado;
+                    });
+                } else {
+                    const desde = normalizarFecha(fechaDesde.value);
+                    const hasta = normalizarFecha(fechaHasta.value);
+                    
+                    if (!desde || !hasta) return gastos;
+
+                    return gastos.filter(gasto => {
+                        const fechaGasto = normalizarFecha(gasto.fecha);
+                        if (!fechaGasto) return false;
+                        
+                        return fechaGasto >= desde && fechaGasto <= hasta;
+                    });
+                }
+            }
+
+            // Función para mostrar gastos
+            function mostrarGastos(gastos) {
+                if (gastos.length === 0) {
+                    historialGastos.innerHTML = '<p class="sin-datos">No hay gastos registrados en este periodo.</p>';
+                    return;
+                }
+
+                const gastosHTML = gastos.map(gasto => {
+                    const fecha = normalizarFecha(gasto.fecha);
+                    const fechaFormateada = fecha ? fecha.toLocaleDateString('es-ES') : 'Fecha no válida';
+                    
+                    return `
+                        <div class="gasto-item">
+                            <div class="gasto-info">
+                                <p class="gasto-fecha">${fechaFormateada}</p>
+                                <p class="gasto-descripcion">${gasto.descripcion}</p>
+                                <p class="gasto-monto">RD$ ${gasto.monto.toFixed(2)}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                historialGastos.innerHTML = gastosHTML;
+            }
+
+            // Función para actualizar el total y los gráficos
+            function actualizarResumen(gastos) {
+                const total = gastos.reduce((sum, gasto) => sum + gasto.monto, 0);
+                totalGastado.textContent = total.toFixed(2);
+
+                // Obtener datos de sueldo
+                const sueldoMensual = parseFloat(localStorage.getItem('sueldoMensual')) || 0;
+                const sueldoDisponible = parseFloat(localStorage.getItem('sueldoDisponible')) || 0;
+
+                // Actualizar gráfico de distribución de gastos
+                if (gastosChart) {
+                    gastosChart.destroy();
+                }
+
+                const ctxGastos = document.getElementById('gastosChart').getContext('2d');
+                gastosChart = new Chart(ctxGastos, {
+                    type: 'pie',
+                    data: {
+                        labels: gastos.map(g => g.descripcion),
+                        datasets: [{
+                            data: gastos.map(g => g.monto),
+                            backgroundColor: [
+                                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                                '#FF9F40', '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+
+                // Actualizar gráfico de comparación
+                if (comparacionChart) {
+                    comparacionChart.destroy();
+                }
+
+                const ctxComparacion = document.getElementById('comparacionChart').getContext('2d');
+                comparacionChart = new Chart(ctxComparacion, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Sueldo Mensual', 'Sueldo Disponible', 'Total Gastado'],
+                        datasets: [{
+                            label: 'Monto en RD$',
+                            data: [sueldoMensual, sueldoDisponible, total],
+                            backgroundColor: [
+                                'rgba(75, 192, 192, 0.6)',
+                                'rgba(54, 162, 235, 0.6)',
+                                'rgba(255, 99, 132, 0.6)'
+                            ],
+                            borderColor: [
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 99, 132, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                suggestedMax: Math.max(sueldoMensual, sueldoDisponible, total) * 1.2
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const value = context.raw || 0;
+                                        return `RD$ ${value.toFixed(2)}`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Evento de envío del formulario
+            filtroForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Guardar filtro
+                const filtroActual = {
+                    tipoFiltro: document.querySelector('input[name="tipoFiltro"]:checked').value,
+                    mes: mesFiltro.value,
+                    fechaDesde: fechaDesde.value,
+                    fechaHasta: fechaHasta.value
+                };
+                localStorage.setItem('filtroGastos', JSON.stringify(filtroActual));
+
+                // Obtener y filtrar gastos
+                const gastos = JSON.parse(localStorage.getItem('historialGastos')) || [];
+                const gastosFiltrados = filtrarGastos(gastos);
+
+                // Actualizar vista
+                mostrarGastos(gastosFiltrados);
+                actualizarResumen(gastosFiltrados);
+            });
+
+            // Inicializar
+            generarOpcionesMeses();
+            
+            // Cargar datos iniciales
+            const gastos = JSON.parse(localStorage.getItem('historialGastos')) || [];
+            const gastosFiltrados = filtrarGastos(gastos);
+            mostrarGastos(gastosFiltrados);
+            actualizarResumen(gastosFiltrados);
+        });
+    </script>
+</body>
+</html>

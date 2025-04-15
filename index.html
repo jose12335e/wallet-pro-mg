@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Gastos</title>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar-menu">
+        <div class="sidebar-user" id="user-info">
+            <!-- Aquí irá el nombre o correo del usuario -->
+        </div>
+
+        <div class="sidebar-links">
+            <a href="sections/sueldo.html" class="sidebar-item"><span>💰</span> Sueldo</a>
+            <a href="sections/ingresos.html" class="sidebar-item"><span>➕</span> Ingresos</a>
+            <a href="sections/gastos.html" class="sidebar-item"><span>💸</span> Gastos</a>
+            <a href="sections/deudas.html" class="sidebar-item"><span>📄</span> Deudas</a>
+            <a href="sections/resumen.html" class="sidebar-item"><span>📊</span> Resumen</a>
+        </div>
+
+        <div class="sidebar-bottom">
+            <a href="sections/configuracion.html">⚙️ Configuración</a>
+            <button id="toggle-dark-mode">🌙 Cambiar tema</button>
+            <button id="logout-btn">🔓 Cerrar sesión</button>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="container">
+        <h1>Control de Gastos</h1>
+
+        <div class="dashboard-grid">
+            <!-- Fila 1 -->
+            <div class="card metas-del-mes">
+                <h3>🎯 Metas del Mes</h3>
+                <ul class="metas-lista">
+                    <li><span>Ahorrar RD$ 5,000</span><div class="barra"><div class="progreso" style="width: 60%;"></div></div></li>
+                    <li><span>No gastar más de RD$ 10,000 en comida</span><div class="barra"><div class="progreso" style="width: 30%;"></div></div></li>
+                    <li><span>Pagar deuda de tarjeta</span><div class="barra"><div class="progreso" style="width: 100%;"></div></div></li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>📊 Progreso del mes</h3>
+                <p>Gasto actual: RD$ 7,800 de RD$ 30,000</p>
+                <div class="barra-progreso">
+                    <div class="progreso" style="width: 26%"></div>
+                </div>
+            </div>
+
+            <!-- Fila 2 -->
+            <div class="card">
+                <h3>💰 Sueldo Mensual</h3>
+                <div class="sueldo-info">
+                    <p>Sueldo Mensual: <span id="sueldo-mensual">0.00</span></p>
+                    <p>Sueldo Disponible: <span id="sueldo-disponible">0.00</span></p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📋 Resumen del Mes</h3>
+                <div class="resumen-mes">
+                    <p>Ingresos: <span id="resumen-ingresos">RD$ 0.00</span></p>
+                    <p>Gastos: <span id="resumen-gastos">RD$ 0.00</span></p>
+                    <p>Deudas: <span id="resumen-deudas">RD$ 0.00</span></p>
+                </div>
+            </div>
+
+            <!-- Fila 3 -->
+            <div class="card consejo-card">
+                <h3>🧠 Consejo del Día</h3>
+                <p class="consejo">"El ahorro no es solo guardar dinero, es invertir en tu futuro. Cada peso que ahorras hoy es un paso más hacia tus sueños."</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./firebase-config.js"></script>
+    <script type="module" src="./script.js"></script>
+</body>
+</html>

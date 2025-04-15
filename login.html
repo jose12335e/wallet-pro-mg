@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Control de Gastos</title>
+    <style>
+        .mensaje {
+            margin-top: 1rem;
+            padding: 0.5rem;
+        }
+        .mensaje.error {
+            color: red;
+        }
+        .mensaje.exito {
+            color: green;
+        }
+        form {
+            margin: 2rem auto;
+            max-width: 300px;
+        }
+        div {
+            margin-bottom: 1rem;
+        }
+        input {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        button {
+            padding: 0.5rem 1rem;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <h2>Iniciar sesión</h2>
+    <form>
+        <div>
+            <input type="email" id="email" placeholder="Correo" required>
+        </div>
+        <div>
+            <input type="password" id="password" placeholder="Contraseña" required>
+        </div>
+        <div>
+            <button type="button" id="loginBtn">Iniciar Sesión</button>
+            <button type="button" id="registerBtn">Crear Cuenta</button>
+        </div>
+    </form>
+    <p id="mensaje"></p>
+    <script type="module" src="./login.js"></script>
+</body>
+</html> 

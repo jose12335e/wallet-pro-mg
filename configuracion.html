@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+</head>
+<body>
+    <div class="container">
+        <h2>Configuración</h2>
+        
+        <div class="config-section">
+            <h3>🌓 Apariencia</h3>
+            <div class="form-group">
+                <label for="select-tema">Tema:</label>
+                <select id="select-tema">
+                    <option value="claro">Claro</option>
+                    <option value="oscuro">Oscuro</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="config-section">
+            <h3>💱 Moneda</h3>
+            <div class="form-group">
+                <label for="select-moneda">Moneda preferida:</label>
+                <select id="select-moneda">
+                    <option value="RD$">Peso Dominicano (RD$)</option>
+                    <option value="US$">Dólar Estadounidense (US$)</option>
+                    <option value="€">Euro (€)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="config-section">
+            <h3>🗓 Fecha de inicio del mes</h3>
+            <div class="form-group">
+                <label for="fecha-inicio-mes">Día del mes:</label>
+                <input type="number" id="fecha-inicio-mes" min="1" max="31" value="1">
+            </div>
+        </div>
+
+        <div class="config-section">
+            <h3>✏️ Perfil</h3>
+            <div class="form-group">
+                <label for="nombre-usuario">Nombre de usuario:</label>
+                <input type="text" id="nombre-usuario" placeholder="Tu nombre">
+            </div>
+        </div>
+
+        <div class="config-section">
+            <h3>🔁 Datos</h3>
+            <button id="resetear-datos" class="btn btn-danger">Resetear todos los datos</button>
+        </div>
+
+        <div class="volver">
+            <a href="../index.html" class="btn-volver">← Volver al Inicio</a>
+        </div>
+    </div>
+
+    <script type="module" src="../firebase-config.js"></script>
+    <script type="module" src="../script.js"></script>
+</body>
+</html> 
